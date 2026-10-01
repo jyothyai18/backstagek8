@@ -17,6 +17,9 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+    GCP_PROJECT_ID: backstagedeployment
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -65,7 +68,7 @@ jobs:
       - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
 
       - name: Install GKE auth plugin
         run: gcloud components install gke-gcloud-auth-plugin --quiet
