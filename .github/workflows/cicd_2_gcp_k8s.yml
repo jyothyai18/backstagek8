@@ -17,9 +17,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-    GCP_PROJECT_ID: backstagedeployment
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -44,6 +41,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    env:
+       GCP_PROJECT_ID: backstagedeployment
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
