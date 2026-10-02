@@ -5,7 +5,7 @@ metadata:
   name: backstage
   namespace: backstage
   labels:
-  app: aram-k8s-service # <--- Matches the label-selector in catalog-info.yaml
+    app: aram-k8s-service # <--- Matches the label-selector in catalog-info.yaml
 spec:
   replicas: 2
 
