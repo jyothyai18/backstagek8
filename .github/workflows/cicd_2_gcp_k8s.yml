@@ -11,7 +11,7 @@ on:
     branches: [ "main" ]
 env:
   REPO: backstagek8
-  IMAGE: arambackstagedocker
+  IMAGE: backstage
 
 jobs:
   build:
@@ -80,15 +80,15 @@ jobs:
           -t ${{ secrets.GKE_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.IMAGE }}:$GITHUB_SHA \
           -f packages/backend/Dockerfile .
 
-      - name: Create Artifact Registry repo if not exists
-        run: |
-          gcloud artifacts repositories describe ${{ env.REPO }} \
-            --project=${{ secrets.GCP_PROJECT_ID }} \
-            --location=${{ secrets.GKE_REGION }} || \
-          gcloud artifacts repositories create ${{ env.REPO }} \
-            --repository-format=docker \
-            --location=${{ secrets.GKE_REGION }} \
-            --project=${{ secrets.GCP_PROJECT_ID }}
+      # - name: Create Artifact Registry repo if not exists
+      #   run: |
+      #     gcloud artifacts repositories describe ${{ env.REPO }} \
+      #       --project=${{ secrets.GCP_PROJECT_ID }} \
+      #       --location=${{ secrets.GKE_REGION }} || \
+      #     gcloud artifacts repositories create ${{ env.REPO }} \
+      #       --repository-format=docker \
+      #       --location=${{ secrets.GKE_REGION }} \
+      #       --project=${{ secrets.GCP_PROJECT_ID }}
 
       - name: Push image to Artifact Registry
         run: |
@@ -103,9 +103,9 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           kubectl apply -f k8s/namespace.yaml
-          kubectl apply -f k8s/deployment.yaml
+          # Export the variable so envsubst can read it from the environment
+          export FULL_IMAGE_TAG="${{ secrets.GKE_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ github.sha }}"
+          # Render and apply
+          envsubst '${FULL_IMAGE_TAG}' < k8s/deployment.yaml | kubectl apply -f - 
           kubectl apply -f k8s/service.yaml
-          kubectl set image deployment/backstage \
-          backstage=${{ secrets.GKE_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO }}/${{ env.IMAGE }}:${{ github.sha }} \
-          -n backstage
-          kubectl get pods -n backstage
+          kubectl rollout status deployment/backstage -n backstage
